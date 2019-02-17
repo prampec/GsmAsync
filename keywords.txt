@@ -1,0 +1,12 @@
+# Datatypes (KEYWORD1)
+# Methods and Functions (KEYWORD2)
+# Constants (LITERAL1)
+
+IotWebConfParameter	GsmHandler
+prefix	KEYWORD3
+response	KEYWORD3
+
+IotWebConf	GsmAsync
+registerHandler	KEYWORD2
+addCommand	KEYWORD2
+doLoop	KEYWORD2
