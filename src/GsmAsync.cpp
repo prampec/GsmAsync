@@ -14,7 +14,7 @@
 static char* GSMASYNC_OK_STR = "OK";
 static char* GSMASYNC_ERROR_STR = "ERROR";
 
-GsmAsync::GsmAsync(HardwareSerial* gsm, void (*timeoutHandler)(), void (*errorHandler)())
+GsmAsync::GsmAsync(Stream* gsm, void (*timeoutHandler)(), void (*errorHandler)())
 {
   this->_gsm = gsm;
   this->_timeoutHandler = timeoutHandler;

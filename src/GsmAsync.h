@@ -45,7 +45,7 @@ class GsmAsync
      *     and still still no OK answer arrived within timeOutMs from the module.
      * errorHandler - This method will be called, when ERROR response arrives from the module.
      */
-    GsmAsync(HardwareSerial* gsm, void (*timeoutHandler)() = NULL, void (*errorHandler)() = NULL);
+    GsmAsync(Stream* gsm, void (*timeoutHandler)() = NULL, void (*errorHandler)() = NULL);
 
     /**
      * The callback will be called, when string match found.
@@ -74,7 +74,7 @@ class GsmAsync
     void handleOk();
     void handleError();
     
-    HardwareSerial* _gsm;
+    Stream* _gsm;
     void (*_timeoutHandler)();
     void (*_errorHandler)();
     char _buffer[GSMASYNC_BUF_SIZE];
