@@ -29,6 +29,14 @@ void GsmAsync::doLoop()
     {
       // -- Read result to buffer on handler-match
       boolean bufferReady = this->fillResultBuffer();
+      /*
+      Serial.println();
+      Serial.print("Calling handler for '");
+      Serial.print(this->_handlerToCall->prefix);
+      Serial.print("' with argument '");
+      Serial.print(this->_buffer);
+      Serial.println("'.");
+      */
       if (bufferReady)
       {
         (this->_handlerToCall->callback)(this->_buffer); // -- Call callback.
@@ -255,7 +263,7 @@ void GsmAsync::checkTimeout()
   if (this->_waitingForResponse)
   {
     unsigned long currentCommandTimeout = this->_commandTimeouts[0];
-    if (currentCommandTimeout < (millis() - _lastSendTime))
+    if (currentCommandTimeout < (millis() - this->_lastSendTime))
     {
       // -- Time Out
       this->_retryCount += 1;
@@ -265,6 +273,7 @@ void GsmAsync::checkTimeout()
         // -- Clear commands
         this->_nextCommand = 0;
         this->_retryCount = 0;
+        this->_waitingForResponse = false;
         if (this->_timeoutHandler != NULL)
         {
           this->_timeoutHandler(); // -- Call handler
