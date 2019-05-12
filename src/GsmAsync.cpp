@@ -11,8 +11,8 @@
 
 #include "GsmAsync.h"
 
-static char* GSMASYNC_OK_STR = "OK";
-static char* GSMASYNC_ERROR_STR = "ERROR";
+static const char* GSMASYNC_OK_STR = "OK";
+static const char* GSMASYNC_ERROR_STR = "ERROR";
 
 GsmAsync::GsmAsync(Stream* gsm, void (*timeoutHandler)(), void (*errorHandler)())
 {
@@ -229,7 +229,7 @@ void GsmAsync::handleError()
   }
 }
 
-void GsmAsync::addCommand(char* command, unsigned long timeOutMs)
+void GsmAsync::addCommand(const char* command, unsigned long timeOutMs)
 {
   if (this->_nextCommand >= GSMASYNC_COMMAND_BUF_SIZE)
   {
