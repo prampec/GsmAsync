@@ -38,14 +38,15 @@ typedef struct GsmHandler
 class GsmAsync
 {
   public:
+    GsmAsync();
     /**
-     * Create the GsmAsync instance.
+     * Initialize the GsmAsync instance.
      * gsm - Reference to the serail line
      * timeoutHandler - This method will be called, when a command is sent GSMASYNC_MAX_RETRIES times 
      *     and still still no OK answer arrived within timeOutMs from the module.
      * errorHandler - This method will be called, when ERROR response arrives from the module.
      */
-    GsmAsync(Stream* gsm, void (*timeoutHandler)() = NULL, void (*errorHandler)() = NULL);
+    void init(Stream* gsm, void (*timeoutHandler)() = NULL, void (*errorHandler)() = NULL);
 
     /**
      * The callback will be called, when string match found.

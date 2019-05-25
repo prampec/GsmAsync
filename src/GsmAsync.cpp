@@ -14,7 +14,11 @@
 static const char* GSMASYNC_OK_STR = "OK";
 static const char* GSMASYNC_ERROR_STR = "ERROR";
 
-GsmAsync::GsmAsync(Stream* gsm, void (*timeoutHandler)(), void (*errorHandler)())
+GsmAsync::GsmAsync()
+{
+
+}
+void GsmAsync::init(Stream* gsm, void (*timeoutHandler)(), void (*errorHandler)())
 {
   this->_gsm = gsm;
   this->_timeoutHandler = timeoutHandler;
@@ -238,6 +242,10 @@ void GsmAsync::addCommand(const char* command, unsigned long timeOutMs)
   }
   this->_commands[this->_nextCommand] = command;
   this->_commandTimeouts[this->_nextCommand] = timeOutMs;
+//  Serial.print("Command[");
+//  Serial.print(this->_nextCommand);
+//  Serial.print("] added: ");
+//  Serial.println(command);
   this->_nextCommand += 1;
   if (this->_nextCommand == 1)
   {
