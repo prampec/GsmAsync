@@ -46,7 +46,6 @@ void GsmAsync::doLoop()
 #endif
         (this->_handlerToCall->callback)(this->_buffer); // -- Call callback.
         this->_gsmState = GSMASYNC_READ_STATE_NORMAL;
-        clearSerial();
       }
     }
     else // -- GSMASYNC_READ_STATE_NORMAL
