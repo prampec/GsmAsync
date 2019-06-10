@@ -33,25 +33,29 @@ void GsmAsync::doLoop()
     {
       // -- Read result to buffer on handler-match
       boolean bufferReady = this->fillResultBuffer();
-      /*
-      Serial.println();
-      Serial.print("Calling handler for '");
-      Serial.print(this->_handlerToCall->prefix);
-      Serial.print("' with argument '");
-      Serial.print(this->_buffer);
-      Serial.println("'.");
-      */
       if (bufferReady)
       {
+#if GSMASYNC_DEBUG >= 1
+        Serial.println();
+        Serial.print((double)millis() / 1000);
+        Serial.print(" Calling handler for '");
+        Serial.print(this->_handlerToCall->prefix);
+        Serial.print("' with argument '");
+        Serial.print(this->_buffer);
+        Serial.println("'.");
+#endif
         (this->_handlerToCall->callback)(this->_buffer); // -- Call callback.
         this->_gsmState = GSMASYNC_READ_STATE_NORMAL;
+        clearSerial();
       }
     }
     else // -- GSMASYNC_READ_STATE_NORMAL
     {
       // -- Read all characters and search for a pattern match.
       char c = this->_gsm->read();
-//Serial.write(c);
+#if GSMASYNC_DEBUG >= 3
+      Serial.write(c);
+#endif
       if (c < 32)
       {
         this->_okPos = 0;
@@ -60,13 +64,13 @@ void GsmAsync::doLoop()
       }
       if (checkOk(c))
       {
-        // TODO: might want to clear read buffer before calling any new command
+        this->clearSerial();
         this->handleOk();
         continue;
       }
       if (checkError(c))
       {
-        // TODO: might want to clear read buffer before calling any new command
+        clearSerial();
         this->handleError();
         continue;
       }
@@ -82,6 +86,14 @@ void GsmAsync::doLoop()
   this->checkTimeout();
 }
 
+void GsmAsync::clearSerial()
+{
+  while(this->_gsm->available())
+  {
+    this->_gsm->read();
+  }
+}
+
 // -- TODO: How could we add OK and ERROR handlers as GsmHandler?
 /**
  * Retruns true, when OK symbole received.
@@ -95,9 +107,9 @@ boolean GsmAsync::checkOk(char c)
   if (GSMASYNC_OK_STR[this->_okPos] == c)
   {
     this->_okPos += 1;
-    if (this->_okPos == strlen(GSMASYNC_OK_STR))
+    if (this->_okPos == (int)strlen(GSMASYNC_OK_STR))
     {
-      this->_okPos = 0;
+      this->_okPos = -1;
       return true;
     }
     return false;
@@ -118,9 +130,9 @@ boolean GsmAsync::checkError(char c)
   if (GSMASYNC_ERROR_STR[this->_errorPos] == c)
   {
     this->_errorPos += 1;
-    if (this->_errorPos == strlen(GSMASYNC_ERROR_STR))
+    if (this->_errorPos == (int)strlen(GSMASYNC_ERROR_STR))
     {
-      this->_errorPos = 0;
+      this->_errorPos = -1;
       return true;
     }
     return false;
@@ -138,7 +150,7 @@ boolean GsmAsync::fillResultBuffer()
   while (this->_gsm->available())
   {
     char c = this->_gsm->read();
-    if ((this->_buffPos == 0) && (c == ' '))
+    if ((this->_buffPos == 0) && ((c == ' ') || (c == ':')))
     {
       continue; // Swallow empty characters between prefix and result.
     }
@@ -221,12 +233,19 @@ void GsmAsync::handleOk()
   }
   this->_waitingForResponse = false;
   this->_retryCount = 0;
-//Serial.println("OK");
+#if GSMASYNC_DEBUG >= 2
+  Serial.print((double)millis() / 1000);
+  Serial.println(" GSM OK");
+#endif
   this->executeNextCommand();
 }
 
 void GsmAsync::handleError()
 {
+#if GSMASYNC_DEBUG >= 2
+  Serial.print((double)millis() / 1000);
+  Serial.println(" GSM ERROR");
+#endif
   if (this->_errorHandler)
   {
     this->_errorHandler();
@@ -242,10 +261,13 @@ void GsmAsync::addCommand(const char* command, unsigned long timeOutMs)
   }
   this->_commands[this->_nextCommand] = command;
   this->_commandTimeouts[this->_nextCommand] = timeOutMs;
-//  Serial.print("Command[");
-//  Serial.print(this->_nextCommand);
-//  Serial.print("] added: ");
-//  Serial.println(command);
+#if GSMASYNC_DEBUG >= 1
+  Serial.print((double)millis() / 1000);
+  Serial.print(" GSM Command[");
+  Serial.print(this->_nextCommand);
+  Serial.print("] added: ");
+  Serial.println(command);
+#endif
   this->_nextCommand += 1;
   if (this->_nextCommand == 1)
   {
@@ -259,7 +281,11 @@ void GsmAsync::executeNextCommand()
   if (this->_nextCommand > 0)
   {
     const char* currentCommand = this->_commands[0];
-//Serial.println(currentCommand);
+#ifdef GSMASYNC_DEBUG
+    Serial.print((double)millis() / 1000);
+    Serial.print(" GSM CMD: ");
+    Serial.println(currentCommand);
+#endif
     this->_gsm->println(currentCommand);
     this->_waitingForResponse = true;
     this->_lastSendTime = millis();
@@ -274,14 +300,23 @@ void GsmAsync::checkTimeout()
     if (currentCommandTimeout < (millis() - this->_lastSendTime))
     {
       // -- Time Out
+#if GSMASYNC_DEBUG >= 1
+      Serial.print((double)millis() / 1000);
+      Serial.print(" Timeout for '");
+      Serial.print(this->_commands[0]);
+      Serial.print("' (");
+      Serial.print(currentCommandTimeout);
+      Serial.println(" ms).");
+#endif
       this->_retryCount += 1;
       if (this->_retryCount >= GSMASYNC_MAX_RETRIES)
       {
         // -- Retries exceeded
+#if GSMASYNC_DEBUG >= 1
+      Serial.println("Retries exceeded.");
+#endif
         // -- Clear commands
-        this->_nextCommand = 0;
-        this->_retryCount = 0;
-        this->_waitingForResponse = false;
+        this->clearCommandQueue();
         if (this->_timeoutHandler != NULL)
         {
           this->_timeoutHandler(); // -- Call handler
@@ -291,5 +326,12 @@ void GsmAsync::checkTimeout()
       this->executeNextCommand();
     }
   }
+}
+
+void GsmAsync::clearCommandQueue()
+{
+  this->_nextCommand = 0;
+  this->_retryCount = 0;
+  this->_waitingForResponse = false;
 }
 

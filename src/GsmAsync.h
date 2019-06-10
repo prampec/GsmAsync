@@ -18,8 +18,13 @@
 #define GSMASYNC_COMMAND_BUF_SIZE 20
 #define GSMASYNC_READ_STATE_NORMAL 0
 #define GSMASYNC_READ_STATE_BUFF 1
-#define GSMASYNC_REPONSE_TIMEOUT_MS 300
+#define GSMASYNC_REPONSE_TIMEOUT_MS 2000
 #define GSMASYNC_MAX_RETRIES 3
+
+// #define GSMASYNC_DEBUG 0 // -- Debug executed commands
+// #define GSMASYNC_DEBUG 1 // -- Also debug commands added
+// #define GSMASYNC_DEBUG 2 // -- Also debug command executon results
+// #define GSMASYNC_DEBUG 3 // -- Also debug all unprocessed data
 
 /**
  * Structure for holding response callbacks.
@@ -64,6 +69,11 @@ class GsmAsync
      */
     void doLoop();
 
+    /**
+     * Remove all pending commands in the queue.
+     */
+    void clearCommandQueue();
+
   private:
     boolean fillResultBuffer();
     GsmHandler* checkGsmHandler(char c);
@@ -74,7 +84,8 @@ class GsmAsync
     void checkTimeout();
     void handleOk();
     void handleError();
-    
+    void clearSerial();
+
     Stream* _gsm;
     void (*_timeoutHandler)();
     void (*_errorHandler)();
@@ -85,8 +96,8 @@ class GsmAsync
     unsigned long _commandTimeouts[GSMASYNC_COMMAND_BUF_SIZE];
     byte _buffPos = 0;
     byte _gsmState = GSMASYNC_READ_STATE_NORMAL;
-    size_t _okPos = -1;
-    size_t _errorPos = -1;
+    int _okPos = -1;
+    int _errorPos = -1;
     byte _nextCommand;
     boolean _waitingForResponse = false;
     unsigned long _lastSendTime;
