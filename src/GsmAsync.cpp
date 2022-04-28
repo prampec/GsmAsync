@@ -227,6 +227,7 @@ void GsmAsync::handleOk()
     {
       this->_commands[i-1] = this->_commands[i];
       this->_commandTimeouts[i-1] = this->_commandTimeouts[i];
+      this->_commandWaitResponseFlags[i-1] = this->_commandWaitResponseFlags[i];
     }
     this->_nextCommand -= 1;
   }
@@ -251,7 +252,7 @@ void GsmAsync::handleError()
   }
 }
 
-void GsmAsync::addCommand(const char* command, unsigned long timeOutMs)
+void GsmAsync::addCommand(const char* command, unsigned long timeOutMs, bool waitForResponse)
 {
   if (this->_nextCommand >= GSMASYNC_COMMAND_BUF_SIZE)
   {
@@ -260,6 +261,7 @@ void GsmAsync::addCommand(const char* command, unsigned long timeOutMs)
   }
   this->_commands[this->_nextCommand] = command;
   this->_commandTimeouts[this->_nextCommand] = timeOutMs;
+  this->_commandWaitResponseFlags[this->_nextCommand] = waitForResponse;
 #if GSMASYNC_DEBUG >= 1
   Serial.print((double)millis() / 1000);
   Serial.print(" GSM Command[");
@@ -270,7 +272,7 @@ void GsmAsync::addCommand(const char* command, unsigned long timeOutMs)
   this->_nextCommand += 1;
   if (this->_nextCommand == 1)
   {
-    // -- If this is the first command, immediatelly execute it.
+    // -- If this is the first command, immediately execute it.
     executeNextCommand();
   }
 }
@@ -286,7 +288,7 @@ void GsmAsync::executeNextCommand()
     Serial.println(currentCommand);
 #endif
     this->_gsm->println(currentCommand);
-    this->_waitingForResponse = true;
+    this->_waitingForResponse = this->_commandWaitResponseFlags[0];
     this->_lastSendTime = millis();
   }
 }

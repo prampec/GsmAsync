@@ -60,9 +60,12 @@ class GsmAsync
 
     /**
      * Add a new command to the command-queue.
-     * If the queue was previously empty, the command will be immediatelly executed.
+     * If the queue was previously empty, the command will be immediately executed.
      */
-    void addCommand(const char* command, unsigned long timeOutMs = GSMASYNC_REPONSE_TIMEOUT_MS);
+    void addCommand(
+      const char* command,
+       unsigned long timeOutMs = GSMASYNC_REPONSE_TIMEOUT_MS,
+       bool waitForResponse = true);
 
     /**
      * Call this as often as possible, to check for new incoming data, and timeouts.
@@ -94,6 +97,7 @@ class GsmAsync
     GsmHandler* _handlerToCall;
     const char* _commands[GSMASYNC_COMMAND_BUF_SIZE];
     unsigned long _commandTimeouts[GSMASYNC_COMMAND_BUF_SIZE];
+    bool _commandWaitResponseFlags[GSMASYNC_COMMAND_BUF_SIZE];
     byte _buffPos = 0;
     byte _gsmState = GSMASYNC_READ_STATE_NORMAL;
     int _okPos = -1;
