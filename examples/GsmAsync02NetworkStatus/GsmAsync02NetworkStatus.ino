@@ -1,9 +1,9 @@
 /**
- * GsmAsync02NetworkStatus.ino -- GsmAsync is a non-blocking GSM modul communication 
+ * GsmAsync02NetworkStatus.ino -- GsmAsync is a non-blocking GSM module communication 
  *   manager library.
  *   https://github.com/prampec/GsmAsync
  *
- * Copyright (C) 2019 Balazs Kelemen <prampec+arduino@gmail.com>
+ * Copyright (C) 2022 Balazs Kelemen <prampec+arduino@gmail.com>
  *
  * This software may be modified and distributed under the terms
  * of the MIT license.  See the LICENSE file for details.
@@ -19,6 +19,7 @@
  *   and ENABLE pin. Wiring is defined below.
  */
 
+#include <Arduino.h>
 #include <GsmAsync.h>
 
 #define PIN_GSM_ENABLE 9
@@ -26,6 +27,7 @@
 
 #define GSM_TALK_FREQ_MS 20000 // -- Talk to the GSM module in every 20 seconds.
 
+void initGsmModule(void);
 void handleReg(char* result);
 void handleSpn(char* result);
 void handleCsq(char* result);
@@ -38,7 +40,7 @@ GsmHandler csqHandler = { "+CSQ:", handleCsq }; // Signam quality
 
 HardwareSerial* gsm = &Serial1;
 
-GsmAsync gsmAsync(gsm);
+GsmAsync gsmAsync;
 unsigned long lastSendTimeMs = 0;
 int networkState = 4;
 
@@ -48,6 +50,7 @@ void setup()
   gsm->begin(19200);
   Serial.begin(19200);
 
+  gsmAsync.init(gsm, timeoutHandler, errorHandler);
   gsmAsync.registerHandler(&regHandler);
   gsmAsync.registerHandler(&spnHandler);
   gsmAsync.registerHandler(&csqHandler);
@@ -57,7 +60,7 @@ void setup()
   Serial.println(F("Ready."));
 }
 
-int initGsmModule(void)
+void initGsmModule(void)
 {
   Serial.print(F("Reseting GSM.."));
 
@@ -144,7 +147,6 @@ void handleSpn(char* result)
 {
   // -- Serice provider name arrived
   char spn[GSMASYNC_BUF_SIZE];
-  int displayMode;
   char *p = strchr(result, ',');
   if (p != NULL)
   {
@@ -152,7 +154,7 @@ void handleSpn(char* result)
     strncpy(spn, result, index);
     spn[index] = '\0';
   }
-  Serial.print(F("Serivice provider is: "));
+  Serial.print(F("Service provider is: "));
   Serial.println(spn);
 }
 

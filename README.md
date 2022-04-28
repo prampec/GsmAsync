@@ -1,8 +1,8 @@
 ## Description
-GsmAsync was implemented to reduce the complexity of communicating with GSM (SIM800, SIM900) modules. The solution GsmAsync performes an event-driven communication, so user code doesn't need to *wait* for answer arriving from the GSM module.
+GsmAsync was implemented to reduce the complexity of communicating with GSM (SIM800, SIM900) modules. The solution GsmAsync performs an event-driven communication, so user code doesn't need to *wait* for answer arriving from the GSM module.
 
 GsmAsync provides two basic features:
-* You can add commands to the command-queue, where next command will be executed automatically uppon success. 
+* You can add commands to the command-queue, where next command will be executed automatically upon success. 
 * You can register callbacks that are called, when the designated answer arrives from the GSM module.
 
 Besides that, GsmAsync also provides **timeout** and **error** handling.
@@ -10,7 +10,7 @@ Besides that, GsmAsync also provides **timeout** and **error** handling.
 ## Working principals
 
 ### Command execution
-Fortunatelly the communication protocol of the GSM modules is very consistent. You will issue an *AT* command to the module, where it will respond with an answer. And the sentence always finished with *OK* on success.
+Fortunately the communication protocol of the GSM modules is very consistent. You will issue an *AT* command to the module, where it will respond with an answer. And the sentence always finished with *OK* on success.
 
 You put your commands to the command-queue provided by GsmAsync, and the commands will be executed automatically one after an other. The next command will be sent when got *OK* answer for the previous one. If no answer arrives within a time period\*, the command will be resent. The sending will be retried for some times\*\* but finally a *timeout* event will be generated if the GSM module is not responding.
 
@@ -29,12 +29,15 @@ Using this example you can subscribe to an answer *"+CSQ:"* with specifying a cu
 
 ## Interface description
 
-This is an informal description of the GsmAsync class methods, for more detailed documentation please wisit GsmAsync.h .
+This is an informal description of the GsmAsync class methods, for more detailed documentation please visit GsmAsync.h .
 
 ```
-void timeoutHandler();
-void errorHandler();
-GsmAsync gsmAsync(&Serial1, timeoutHandler, errorHandler);
+GsmAsync gsmAsync;
+...
+void setup() {
+...
+  gsmAsync.init(&Serial1);
+}
 ...
 void loop()
 {
@@ -53,11 +56,16 @@ doLoop() must be called as frequently as possible to let GsmAsync check for inpu
 You can add commands to the command queue. Commands will be executed one after an other.
 
 ```
+void timeoutHandler();
+void errorHandler();
 void handleCsq(char* result);
+...
+GsmAsync gsmAsync;
 GsmHandler csqHandler = { "+CSQ:", handleCsq };
 ...
 void setup() {
 ...
+  gsmAsync.init(&Serial1, timeoutHandler, errorHandler);
   gsmAsync.registerHandler(&csqHandler);
 }
 ...
